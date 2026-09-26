@@ -161,7 +161,7 @@ const SERVICES = [
       { q: 'How much does fence repair cost?', a: 'Replacing a single post runs $250-$400. Rebuilding a fallen section is usually $500 to $1,200 depending on length. We quote the exact price at a free visit.' },
       { q: 'Can you match my existing cedar fence?', a: 'Usually, yes. New cedar starts brighter and weathers to match within a season, and we can stain the repair to blend it sooner.' },
     ],
-    photo: null,
+    photo: 'fence-repair.jpg',
     icon: 'hammer',
   },
   {
