@@ -1231,14 +1231,16 @@ body.modal-open { overflow: hidden; }
 /* =====================================================================
    Buddy Fence (2026-09-25): reference-style hero, header mascot, icon cards
    ===================================================================== */
-.brand-buddy { height: 58px; width: auto; margin-right: 10px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
-.brand-mark { height: 50px; }
+.brand-buddy { height: 66px; width: auto; margin-right: 12px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
+.brand-mark { height: 56px; }
 @media (max-width: 840px) { .brand-buddy { height: 44px; margin-right: 6px; } .brand-mark { height: 38px; } }
 
-.home-hero.fence .bg { background-position: 70% 40%; }
-.home-hero.fence .scrim { background: linear-gradient(90deg, rgba(10, 22, 38, 0.96) 0%, rgba(10, 22, 38, 0.9) 38%, rgba(10, 22, 38, 0.55) 62%, rgba(10, 22, 38, 0.1) 100%); }
-.home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 640px) 1fr; gap: 40px; padding-bottom: clamp(70px, 8vw, 110px) !important; }
-.home-hero.fence h1 { font-size: clamp(3.4rem, 7.2vw, 6.4rem); line-height: 0.9; letter-spacing: 0.01em; margin: 6px 0 14px; }
+.home-hero.fence .bg { background-position: 50% 62%; }
+.home-hero.fence { min-height: min(86vh, 820px); }
+.home-hero.fence .hero-v3 { align-items: center; }
+.home-hero.fence .scrim { background: linear-gradient(90deg, rgba(10, 22, 38, 0.9) 0%, rgba(10, 22, 38, 0.82) 30%, rgba(10, 22, 38, 0.58) 52%, rgba(10, 22, 38, 0.22) 75%, rgba(10, 22, 38, 0.08) 100%); }
+.home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 780px) 1fr; gap: 40px; max-width: 1480px; padding-bottom: clamp(70px, 8vw, 110px) !important; }
+.home-hero.fence h1 { font-size: clamp(3.4rem, 7.2vw, 7.2rem); line-height: 0.9; letter-spacing: 0.01em; margin: 6px 0 14px; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35); }
 .home-hero.fence .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; }
 .hero-tags { display: flex; flex-wrap: wrap; gap: 0 14px; margin: 0 0 26px; font-family: 'Bebas Neue', sans-serif; font-size: clamp(16px, 1.6vw, 22px); letter-spacing: 0.16em; color: rgba(255, 255, 255, 0.85); }
 .hero-tags span + span::before { content: '|'; margin-right: 14px; color: var(--gold); }
@@ -1246,9 +1248,12 @@ body.modal-open { overflow: hidden; }
 .hero-points li { display: flex; align-items: center; gap: 14px; }
 .hero-points .ic { width: 54px; height: 54px; }
 .hero-points strong { display: block; font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.04em; line-height: 1; color: #fff; }
-.hero-points span { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); margin-top: 3px; }
+.hero-points div span { display: block; font-size: 13.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); margin-top: 3px; }
+.hero-points .ic { flex-shrink: 0; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3); }
 .home-hero.fence .hero-btns { margin-top: 0; }
-.trust-row.hero-trust { background: var(--navy-deep); }
+.trust-row.hero-trust { background: var(--navy-deep); border-top: 3px solid var(--gold); }
+.trust-row.hero-trust .container { padding-top: 22px; padding-bottom: 22px; }
+.trust-row.hero-trust span { font-size: 14.5px; }
 .trust-row.hero-trust .ico { color: #fff; }
 @media (max-width: 900px) { .home-hero.fence .hero-v3 { grid-template-columns: 1fr; } .home-hero.fence .scrim { background: linear-gradient(180deg, rgba(10, 22, 38, 0.94) 0%, rgba(10, 22, 38, 0.88) 100%); } }
 
