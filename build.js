@@ -127,7 +127,7 @@ const header = (isHome) => `
   <div class="container wide">
     <a class="brand" href="/">
       <img class="brand-buddy" src="/assets/img/buddy-bust.webp" alt="" aria-hidden="true" width="415" height="440" />
-      <img class="brand-mark" src="/assets/img/buddy-fence-wordmark-white.png" alt="Buddy Fence" width="356" height="160" />
+      <img class="brand-mark" src="/assets/img/buddy-fence-wordmark-white.png" alt="Buddy Fence" />
     </a>
     <nav class="site-nav">
       <a class="hide-m" href="/#services">Services</a>
