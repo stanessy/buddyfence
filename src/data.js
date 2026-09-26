@@ -115,7 +115,7 @@ const SERVICES = [
       { q: 'How much does chain link fencing cost?', a: 'Galvanized chain link runs $18-$28 per linear foot installed; black vinyl-coated adds a few dollars a foot. A 150 ft backyard is usually $3,000 to $4,500.' },
       { q: 'Is chain link good for dogs?', a: 'Yes. It is the most dog-proof fence per dollar. We add bottom tension wire and can bury the fabric a few inches for diggers.' },
     ],
-    photo: null,
+    photo: 'chain-link-fence.jpg',
     icon: 'link',
   },
   {
