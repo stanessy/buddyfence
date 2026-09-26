@@ -44,7 +44,7 @@ const SERVICES = [
       { q: 'How long does installation take?', a: 'Most residential fences are done in 1 to 3 days after the posts cure. We tear out the old fence, set posts on day one, and frame and picket once the concrete has set.' },
       { q: 'Do I need a permit for a fence in Vancouver or Portland?', a: 'Fences up to 6 ft in the back and side yards usually do not need a permit. Front-yard heights, corner lots, and 8 ft fences can. We check the rules for your address before we quote.' },
     ],
-    photo: null,
+    photo: 'cedar-privacy-fence.jpg',
     icon: 'fence',
   },
   {
