@@ -1235,7 +1235,7 @@ body.modal-open { overflow: hidden; }
 .brand-mark { height: 50px; }
 @media (max-width: 840px) { .brand-buddy { height: 44px; margin-right: 6px; } .brand-mark { height: 38px; } }
 
-.home-hero.fence .bg { background-position: right center; }
+.home-hero.fence .bg { background-position: 70% 40%; }
 .home-hero.fence .scrim { background: linear-gradient(90deg, rgba(10, 22, 38, 0.96) 0%, rgba(10, 22, 38, 0.9) 38%, rgba(10, 22, 38, 0.55) 62%, rgba(10, 22, 38, 0.1) 100%); }
 .home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 640px) 1fr; gap: 40px; padding-bottom: clamp(70px, 8vw, 110px) !important; }
 .home-hero.fence h1 { font-size: clamp(3.4rem, 7.2vw, 6.4rem); line-height: 0.9; letter-spacing: 0.01em; margin: 6px 0 14px; }
