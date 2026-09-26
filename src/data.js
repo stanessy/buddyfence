@@ -138,7 +138,7 @@ const SERVICES = [
       { q: 'How much does a fence gate cost?', a: 'A 4 ft cedar walk gate installed runs $450-$750. Steel-framed and double drive gates run $900 to $2,500 depending on width and hardware.' },
       { q: 'Why does my gate sag?', a: 'Usually the gate post moved or the gate has no diagonal brace. We reset the post in concrete and rebuild the gate on a steel frame so it stays square.' },
     ],
-    photo: null,
+    photo: 'fence-gates.jpg',
     icon: 'door',
   },
   {
