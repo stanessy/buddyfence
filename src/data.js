@@ -92,7 +92,7 @@ const SERVICES = [
       { q: 'Should I use steel or wood posts for a horizontal fence?', a: 'Steel posts cost more but never twist, so the boards stay in line for the life of the fence. We recommend steel on long runs and modern designs.' },
       { q: 'Do horizontal fences sag?', a: 'Not when the posts are close enough and the boards are fastened with screws. We keep post spacing at 6 ft on horizontal runs.' },
     ],
-    photo: null,
+    photo: 'horizontal-cedar-fence.jpg',
     icon: 'rows',
   },
   {
