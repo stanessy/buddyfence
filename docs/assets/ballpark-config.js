@@ -1,0 +1,2 @@
+window.BT_BALLPARK = {"disclaimerShort":"Not a final quote. Your exact price comes from a free on-site estimate.","laborOnly":"","projects":[],"extras":[],"rangeLow":0.9,"rangeHigh":1.2,"jobMinCents":150000};
+window.BT_DESIGNER = {"rates":{},"features":[],"rangeLo":0.8,"rangeHi":1.3};

@@ -1,0 +1,627 @@
+// Lead form → Buddy Built CRM (division: Buddy Tile). Zero dependencies.
+
+// ---- Human check: tiny math question bots that blind-POST can't answer ------
+(function () {
+  document.querySelectorAll('.human-check').forEach(function (box) {
+    var a = 2 + Math.floor(Math.random() * 7);
+    var b = 2 + Math.floor(Math.random() * 7);
+    box.querySelector('.hc-q').textContent = a + ' + ' + b;
+    box.dataset.answer = String(a + b);
+  });
+})();
+
+function passesHumanCheck(form, statusEl) {
+  var box = form.querySelector('.human-check');
+  if (!box) return true;
+  var given = (form.querySelector('input[name=humanCheck]').value || '').trim();
+  if (given === box.dataset.answer) return true;
+  if (statusEl) {
+    statusEl.hidden = false;
+    statusEl.style.color = '#C0392B';
+    statusEl.textContent = 'That math answer doesn\'t look right, one more try!';
+  }
+  return false;
+}
+
+(function () {
+  // Local previews talk to the dev platform; the live site talks to production.
+  var API_BASE =
+    window.BT_API_BASE ||
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:5001'
+      : 'https://buddybuilt.com');
+  var TILE_DIVISION_ID = 19; // Buddy Fencing division in the platform
+
+  document.querySelectorAll('form.lead-form').forEach(function (form) {
+    if (form.id === 'ballpark-gate-form' || form.id === 'design-gate-form') return; // gates have their own handlers
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var status = form.querySelector('.form-status');
+      var btn = form.querySelector('button[type=submit]');
+      if (!passesHumanCheck(form, status)) return;
+      var f = new FormData(form);
+      if (!f.get('phone') && !f.get('email')) {
+        status.hidden = false;
+        status.style.color = '#FFB4A2';
+        status.textContent = 'Please add a phone number or an email so we can reach you about your estimate.';
+        return;
+      }
+      var description = [f.get('projectType'), f.get('description')].filter(Boolean).join(', ');
+      // Ballpark form: attach the calculator selections + range
+      if (form.dataset.ballpark && window.__ballparkSummary) {
+        description = 'BALLPARK REQUEST, ' + window.__ballparkSummary;
+      }
+
+      btn.disabled = true;
+      status.hidden = false;
+      status.style.color = '#fff';
+      status.textContent = 'Sending…';
+
+      fetch(API_BASE + '/api/public/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: f.get('name'),
+          phone: f.get('phone') || undefined,
+          email: f.get('email') || undefined,
+          city: (f.get('city') || '').split(',')[0] || undefined,
+          description: description || undefined,
+          divisionId: TILE_DIVISION_ID,
+          website: f.get('website') || undefined,
+          source: 'buddytile.com ' + (form.dataset.context || ''),
+        }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (res.ok) {
+            status.style.color = '#F6B015';
+            status.innerHTML = "Got it! We'll reach out the same business day. <img src='/assets/img/buddy-tile-sm.png?v=4' alt='Buddy Tile' style='height:26px;vertical-align:-8px;margin-left:6px'>";
+            form.reset();
+          } else {
+            throw new Error(res.d && res.d.error);
+          }
+        })
+        .catch(function (err) {
+          status.style.color = '#FFB4A2';
+          status.innerHTML =
+            ((err && err.message) || 'Something went wrong.') +
+            ' Call <a href="tel:+13608996336" style="color:inherit;font-weight:700;">(360) 899-6336</a> or email <a href="mailto:info@buddytile.com" style="color:inherit;font-weight:700;">info@buddytile.com</a>.';
+        })
+        .finally(function () {
+          btn.disabled = false;
+        });
+    });
+  });
+})();
+
+
+// ---- Design & Price: project + size -> one ballpark number ---------------
+// Deliberately simple: no feature/upgrade configuration in public (that list
+// belongs to the free estimate, not to competitors' quote-matching).
+(function () {
+  var typeBox = document.getElementById('ds-type');
+  if (!typeBox || !window.BT_DESIGNER || !window.BT_BALLPARK) return;
+  var D = window.BT_DESIGNER;
+  var BP = window.BT_BALLPARK;
+  var API_BASE =
+    window.BT_API_BASE ||
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:5001'
+      : 'https://buddybuilt.com');
+  var TILE_DIVISION_ID = 19; // Buddy Fencing division in the platform
+  var state = { type: 'shower', w: 60, d: 36, h: 96, walls: 3, sqft: 60, scope: 'tile', rsize: 'standard' };
+
+  function chips(id, attr, cb) {
+    var box = document.getElementById(id);
+    if (!box) return;
+    box.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        box.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        cb(b.dataset[attr]);
+        render();
+      });
+    });
+  }
+  chips('ds-h', 'h', function (v) { state.h = Number(v); });
+  ['ds-w', 'ds-d', 'ds-sqft'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', render);
+  });
+  document.getElementById('ds-walls').addEventListener('change', render);
+  document.querySelectorAll('#ds-scope .project-card').forEach(function (el) {
+    el.addEventListener('click', function () {
+      state.scope = el.dataset.scope;
+      document.querySelectorAll('#ds-scope .project-card').forEach(function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+      render();
+    });
+  });
+  document.querySelectorAll('#ds-rsize .project-card').forEach(function (el) {
+    el.addEventListener('click', function () {
+      state.rsize = el.dataset.rsize;
+      document.querySelectorAll('#ds-rsize .project-card').forEach(function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+      render();
+    });
+  });
+
+  document.querySelectorAll('#ds-type .project-card').forEach(function (el) {
+    el.addEventListener('click', function () {
+      state.type = el.dataset.type;
+      document.querySelectorAll('#ds-type .project-card').forEach(function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+      var sizes = state.type === 'floor' ? [40, 60, 90] : [20, 30, 45];
+      var sbox = document.getElementById('ds-sizes');
+      if (state.type === 'remodel') { render(); return; }
+      sbox.innerHTML = '';
+      sizes.forEach(function (n, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = '~' + n + ' sq ft';
+        if (i === 1) b.classList.add('on');
+        b.addEventListener('click', function () {
+          sbox.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+          b.classList.add('on');
+          document.getElementById('ds-sqft').value = n;
+          render();
+        });
+        sbox.appendChild(b);
+      });
+      if (state.type !== 'shower') document.getElementById('ds-sqft').value = sizes[1];
+      render();
+    });
+  });
+
+  function priceCents() {
+    if (state.type === 'remodel') {
+      return { total: D.remodel.baseCents * D.remodel.sizes[state.rsize] };
+    }
+    if (state.type === 'shower') {
+      var wFt = state.w / 12, dFt = state.d / 12, hFt = state.h / 12;
+      var wallSqft = (state.walls === 3 ? wFt + 2 * dFt : wFt + dFt) * hFt;
+      var floorSqft = wFt * dFt;
+      // tile-only: no demo/dump/valve fixed scope; complex: full fixed + bump
+      var fixed = state.scope === 'complex' ? D.rates.fixedCents : D.tileOnlyFixedCents;
+      var t = fixed + wallSqft * D.rates.wallCents + floorSqft * D.rates.floorCents;
+      if (state.scope === 'complex') t *= D.complexMultiplier;
+      return { total: t, wallSqft: wallSqft, floorSqft: floorSqft };
+    }
+    var proj = BP.projects.filter(function (p) { return p.key === state.type; })[0];
+    return { total: Math.max(BP.jobMinCents, Math.max(proj.minCents, state.sqft * proj.perSqftCents)) };
+  }
+
+  // floor: complex adds demo/dump/plumbing scope
+  var scoped = function (t) {
+    return state.type === 'floor' && state.scope === 'complex'
+      ? (t + 63000) * D.complexMultiplier
+      : t;
+  };
+
+  function render() {
+    state.w = Number(document.getElementById('ds-w').value) || 60;
+    state.d = Number(document.getElementById('ds-d').value) || 36;
+    state.walls = Number(document.getElementById('ds-walls').value);
+    state.sqft = Number(document.getElementById('ds-sqft').value) || 60;
+    var isShower = state.type === 'shower';
+
+    document.querySelectorAll('[data-show]').forEach(function (el) {
+      el.hidden = el.dataset.show.split(' ').indexOf(state.type) === -1;
+    });
+    var svg = document.getElementById('ds-preview-shower');
+    if (svg) svg.style.display = isShower ? 'block' : 'none';
+    var img = document.getElementById('ds-preview-img');
+    img.hidden = isShower;
+    img.src = state.type === 'floor' ? '/assets/img/bathroom-tile-remodel-vancouver-wa.jpg'
+      : state.type === 'remodel' ? '/assets/img/marble-tile-shower-glass-door.jpg'
+      : '/assets/img/kitchen-tile-backsplash-installation.jpg';
+
+    var p = priceCents();
+    p.total = scoped(p.total);
+    if (isShower) {
+      document.getElementById('ds-areas').innerHTML =
+        'Wall area <b>' + p.wallSqft.toFixed(0) + ' sq ft</b> · Floor <b>' + p.floorSqft.toFixed(0) +
+        ' sq ft</b> · Total tile <b>' + (p.wallSqft + p.floorSqft).toFixed(0) + ' sq ft</b>';
+      document.getElementById('pv-dw').textContent = state.w + ' in';
+      document.getElementById('pv-dd').textContent = state.d + ' in';
+      document.getElementById('pv-dh').textContent = state.h + ' in';
+    }
+
+    var lo = Math.round(p.total * D.rangeLo / 100), hi = Math.round(p.total * D.rangeHi / 100);
+    document.getElementById('design-range').textContent = '$' + lo.toLocaleString() + ' - $' + hi.toLocaleString();
+    var scopeNote = (state.type === 'shower' || state.type === 'floor')
+      ? (state.scope === 'complex' ? ', scope: more than tile' : ', scope: tile only') : '';
+    window.__designSummary = (isShower
+      ? 'Tile shower ' + state.w + '\"W x ' + state.d + '\"D x ' + state.h + '\"H, ' + state.walls + ' walls, ' + (p.wallSqft + p.floorSqft).toFixed(0) + ' sqft'
+      : state.type === 'remodel' ? 'Full bathroom remodel (' + state.rsize + ')'
+      : (state.type === 'floor' ? 'Bathroom floor tile ~' : 'Kitchen backsplash ~') + state.sqft + ' sqft') +
+      scopeNote + ' → $' + lo.toLocaleString() + '-$' + hi.toLocaleString() + ' (core build, labor only)';
+  }
+  render();
+
+  // Gate + booking
+  var gate = document.getElementById('design-gate');
+  var result = document.getElementById('design-result');
+  var contact = null;
+  // Email verification: the visitor proves the address with a 6-digit
+  // code before the number shows and before they become a lead.
+  var verify = document.getElementById('design-verify');
+  var verifyForm = document.getElementById('design-verify-form');
+  var verifyEmailEl = document.getElementById('design-verify-email');
+  var gateForm = document.getElementById('design-gate-form');
+  var honeypot = undefined;
+
+  function showStatus(form, msg, ok) {
+    var status = form.querySelector('.form-status');
+    status.hidden = !msg;
+    status.style.color = ok ? 'var(--navy)' : '#C0392B';
+    status.textContent = msg || '';
+  }
+  function setBusy(form, busy) {
+    var btn = form.querySelector('button[type=submit]');
+    if (btn) { btn.disabled = busy; }
+  }
+  function postJson(path, payload) {
+    return fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || 'Something went wrong, please try again.');
+        return data;
+      });
+    });
+  }
+  function sendCode() {
+    setBusy(gateForm, true);
+    setBusy(verifyForm, true);
+    return postJson('/api/public/verify/start', {
+      email: contact.email, divisionId: TILE_DIVISION_ID, website: honeypot,
+    }).then(function () {
+      verifyEmailEl.textContent = contact.email;
+      gate.hidden = true;
+      verify.hidden = false;
+      showStatus(gateForm, '', true);
+      showStatus(verifyForm, '', true);
+      var codeBox = verifyForm.querySelector('input[name=code]');
+      codeBox.value = '';
+      codeBox.focus();
+    }).catch(function (err) {
+      showStatus(gate.hidden ? verifyForm : gateForm, err.message, false);
+    }).then(function () {
+      setBusy(gateForm, false);
+      setBusy(verifyForm, false);
+    });
+  }
+
+  gateForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var status = gateForm.querySelector('.form-status');
+    if (!passesHumanCheck(gateForm, status)) return;
+    var f = new FormData(gateForm);
+    honeypot = f.get('website') || undefined;
+    contact = { name: f.get('name'), email: String(f.get('email') || '').trim(), phone: f.get('phone') || undefined };
+    showStatus(gateForm, 'Sending your code…', true);
+    sendCode();
+  });
+
+  verifyForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = (verifyForm.querySelector('input[name=code]').value || '').replace(/\D/g, '');
+    if (code.length !== 6) { showStatus(verifyForm, 'Enter the 6-digit code from your email.', false); return; }
+    setBusy(verifyForm, true);
+    showStatus(verifyForm, 'Checking…', true);
+    postJson('/api/public/verify/check', { email: contact.email, code: code }).then(function (data) {
+      contact.verificationToken = data.token;
+      return postJson('/api/public/leads', {
+        name: contact.name, email: contact.email, phone: contact.phone,
+        description: 'BALLPARK TOOL, ' + (window.__designSummary || ''),
+        divisionId: TILE_DIVISION_ID, website: honeypot,
+        source: 'buddytile.com design',
+        verificationToken: contact.verificationToken,
+      });
+    }).then(function () {
+      verify.hidden = true;
+      result.hidden = false;
+      render();
+    }).catch(function (err) {
+      showStatus(verifyForm, err.message, false);
+    }).then(function () { setBusy(verifyForm, false); });
+  });
+
+  document.getElementById('design-verify-resend').addEventListener('click', function (e) {
+    e.preventDefault();
+    showStatus(verifyForm, 'Sending a new code…', true);
+    sendCode().then(function () {
+      if (!verify.hidden) showStatus(verifyForm, 'New code sent, check your inbox.', true);
+    });
+  });
+  document.getElementById('design-verify-edit').addEventListener('click', function (e) {
+    e.preventDefault();
+    verify.hidden = true;
+    gate.hidden = false;
+    showStatus(gateForm, '', true);
+    gateForm.querySelector('input[name=email]').focus();
+  });
+  document.getElementById('design-book-btn').addEventListener('click', function () {
+    var status = document.getElementById('design-book-status');
+    status.hidden = false;
+    status.style.color = 'var(--navy)';
+    status.textContent = 'Booking…';
+    fetch(API_BASE + '/api/public/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: contact ? contact.name : 'Ballpark visitor',
+        email: contact ? contact.email : undefined,
+        phone: contact ? contact.phone : undefined,
+        description: 'BALLPARK TOOL, BOOK ESTIMATE, ' + (window.__designSummary || ''),
+        divisionId: TILE_DIVISION_ID,
+        source: 'buddytile.com design-book',
+        verificationToken: contact ? contact.verificationToken : undefined,
+      }),
+    }).then(function (r) {
+      status.textContent = r.ok
+        ? "You're booked for a call, we'll reach out the same business day!"
+        : 'Something went wrong, please call us.';
+    }).catch(function () { status.textContent = 'Something went wrong, please call us.'; });
+  });
+})();
+
+// ---- /pay/: invoice lookup, we email the secure payment link ---------------
+(function () {
+  var form = document.getElementById('pay-lookup');
+  if (!form) return;
+  var API_BASE =
+    window.BT_API_BASE ||
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:5001'
+      : 'https://buddybuilt.com');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var status = form.querySelector('.form-status');
+    var btn = form.querySelector('button[type=submit]');
+    var f = new FormData(form);
+    btn.disabled = true;
+    status.hidden = false;
+    status.style.color = 'var(--navy)';
+    status.textContent = 'Checking…';
+    fetch(API_BASE + '/api/public/pay-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: f.get('number'), email: f.get('email') }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        status.style.color = d.ok ? '#1B7F3B' : '#C0392B';
+        status.textContent = d.message || d.error || 'Something went wrong. Give us a call!';
+      })
+      .catch(function () {
+        status.style.color = '#C0392B';
+        status.textContent = 'Could not reach the server. Call (360) 899-6336 and we will take care of it.';
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
+  });
+})();
+
+// ---- Header logo: oversized at the top of the page, tucks in on scroll ----
+(function () {
+  var header = document.querySelector('.site-header');
+  if (!header) return;
+  var ticking = false;
+  var update = function () {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+    ticking = false;
+  };
+  window.addEventListener(
+    'scroll',
+    function () {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true }
+  );
+  update();
+})();
+
+// ---- Premium homepage: estimate modal, before/after slider, reveals -------
+(function () {
+  document.documentElement.classList.add('js');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal on scroll: staggered by --i, never re-hidden, and a safety net
+  // so nothing can stay invisible if the observer misses.
+  var reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+  function showAll() { reveals.forEach(function (el) { el.classList.add('in'); }); }
+  if (!reveals.length || reduce || !('IntersectionObserver' in window)) {
+    showAll();
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+    reveals.forEach(function (el) { io.observe(el); });
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        reveals.forEach(function (el) {
+          if (!el.classList.contains('in') && el.getBoundingClientRect().top < window.innerHeight) el.classList.add('in');
+        });
+      }, 1500);
+    });
+  }
+
+  // Hero parallax: the room drifts at a quarter of scroll speed (desktop only)
+  var heroBg = document.querySelector('.home-hero .bg');
+  if (heroBg && !reduce && window.innerWidth > 900) {
+    heroBg.classList.add('parallax');
+    var ticking = false;
+    function drift() {
+      var y = window.scrollY || window.pageYOffset;
+      var h = heroBg.parentNode.offsetHeight || 1;
+      if (y <= h) heroBg.style.setProperty('--py', Math.round(y * 0.25) + 'px');
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(drift); } }, { passive: true });
+    drift();
+  }
+  var modal = document.getElementById('estimate-modal');
+  if (modal) {
+    var lastFocus = null;
+    function openModal(e) {
+      if (e) e.preventDefault();
+      lastFocus = document.activeElement;
+      modal.hidden = false;
+      document.body.classList.add('modal-open');
+      var first = modal.querySelector('input[name=name]');
+      if (first) { try { first.focus({ preventScroll: true }); } catch (e) { first.focus(); } }
+    }
+    function closeModal() {
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    document.querySelectorAll('[data-open-estimate]').forEach(function (a) { a.addEventListener('click', openModal); });
+    modal.querySelectorAll('[data-close-estimate]').forEach(function (b) { b.addEventListener('click', closeModal); });
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+  }
+
+  // "Explore all services" expands the full list in place instead of leaving
+  var toggle = document.querySelector('[data-services-toggle]');
+  var all = document.getElementById('all-services');
+  if (toggle && all) {
+    toggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      all.hidden = !all.hidden;
+      toggle.textContent = all.hidden ? toggle.dataset.label || toggle.textContent : 'Hide services';
+      if (!toggle.dataset.label) toggle.dataset.label = 'Explore All Services →';
+    });
+  }
+
+  document.querySelectorAll('[data-ba]').forEach(function (ba) {
+    var range = ba.querySelector('input[type=range]');
+    var before = ba.querySelector('.ba-before');
+    var handle = ba.querySelector('.ba-handle');
+    var beforeImg = before && before.querySelector('img');
+    function size() { if (beforeImg) beforeImg.style.width = ba.clientWidth + 'px'; }
+    function set(v) { before.style.width = v + '%'; handle.style.left = v + '%'; }
+    if (range) range.addEventListener('input', function () { set(range.value); });
+    window.addEventListener('resize', size);
+    size();
+    set(range ? range.value : 50);
+  });
+
+})();
+
+// ---- Service-area map: label-free basemap behind the city card ------------
+(function () {
+  var el = document.getElementById('service-map');
+  var data = window.BT_SERVICE_AREA;
+  if (!el || !data) return;
+  var LEAFLET = 'https://unpkg.com/leaflet@1.9.4/dist/';
+  var started = false;
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = LEAFLET + 'leaflet.css';
+      document.head.appendChild(css);
+      var js = document.createElement('script');
+      js.src = LEAFLET + 'leaflet.js';
+      js.onload = resolve;
+      js.onerror = reject;
+      document.head.appendChild(js);
+    });
+  }
+  function build() {
+    var L = window.L;
+    var map = L.map(el, {
+      zoomControl: false, scrollWheelZoom: false, doubleClickZoom: false, dragging: false,
+      touchZoom: false, boxZoom: false, keyboard: false,
+      // Whole-number zooms only: fractional zoom scales the 256px tiles and
+      // leaves hairline seams between them.
+      zoomSnap: 1,
+      attributionControl: false,
+    });
+    // Esri's tile terms require a credit; keep it, but only the credit.
+    L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(map);
+    // Esri's light gray base has no labels (labels live in a separate reference layer)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+    }).addTo(map);
+    var markers = {};
+    var pins = {};
+    var bounds = [];
+    function add(key, lat, lng, town, html) {
+      var pinEl = document.createElement('div');
+      pinEl.className = 'bt-pin';
+      var m = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: pinEl, iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: town ? 0 : 100 })
+        .addTo(map)
+        .bindPopup(html, { offset: [0, -8] });
+      markers[key] = m;
+      pins[key] = pinEl;
+      bounds.push([lat, lng]);
+    }
+    data.towns.forEach(function (t) {
+      add('town:' + t.name, t.lat, t.lng, true, '<div class="bt-pop"><strong>' + t.name + ', ' + t.state + '</strong><span>Tile showers, floors, and backsplashes</span></div>');
+    });
+    data.cities.forEach(function (c) {
+      add(c.slug, c.lat, c.lng, false, '<div class="bt-pop"><strong>' + c.name + ', ' + c.state + '</strong><span>' + c.hoods.join(' · ') + '</span><a href="' + c.url + '">Tile work in ' + c.name + ' →</a></div>');
+    });
+    // Keep the pins clear of the floating card on wide screens
+    function fit(animate) {
+      var card = document.querySelector('.area-card');
+      var mr = el.getBoundingClientRect();
+      var cr = card ? card.getBoundingClientRect() : null;
+      // Only pad for the card when it sits beside the map (desktop), not below it
+      var cy = cr ? (cr.top + cr.bottom) / 2 : 0;
+      var beside = cr && cy > mr.top && cy < mr.bottom && cr.left > mr.left + mr.width * 0.3;
+      var right = beside ? mr.right - cr.left + 40 : 40;
+      map.fitBounds(bounds, { paddingTopLeft: [40, 40], paddingBottomRight: [right, beside ? 40 : 90], maxZoom: 11, animate: !!animate });
+    }
+    fit(false);
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { map.invalidateSize(); fit(false); }, 150); });
+    var activeKey = null;
+    function activate(key) {
+      if (activeKey && pins[activeKey]) pins[activeKey].classList.remove('active');
+      document.querySelectorAll('.city-btn.active').forEach(function (b) { b.classList.remove('active'); });
+      activeKey = key;
+      if (!markers[key]) return;
+      pins[key].classList.add('active');
+      var btn = document.querySelector(key.indexOf('town:') === 0 ? '.city-btn[data-town="' + key.slice(5) + '"]' : '.city-btn[data-city="' + key + '"]');
+      if (btn) btn.classList.add('active');
+      markers[key].openPopup();
+    }
+    document.querySelectorAll('.city-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var key = b.dataset.city || 'town:' + b.dataset.town;
+        activate(key);
+      });
+    });
+    Object.keys(markers).forEach(function (key) { markers[key].on('click', function () { activate(key); }); });
+    map.on('popupclose', function () { if (activeKey) { if (pins[activeKey]) pins[activeKey].classList.remove('active'); document.querySelectorAll('.city-btn.active').forEach(function (b) { b.classList.remove('active'); }); activeKey = null; } });
+  }
+  function start() {
+    if (started) return;
+    started = true;
+    loadLeaflet().then(build).catch(function () {
+      el.innerHTML = '';
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      if (entries.some(function (e) { return e.isIntersecting; })) { io.disconnect(); start(); }
+    }, { rootMargin: '400px 0px' });
+    io.observe(el);
+  } else {
+    start();
+  }
+})();
