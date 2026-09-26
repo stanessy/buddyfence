@@ -1231,16 +1231,19 @@ body.modal-open { overflow: hidden; }
 /* =====================================================================
    Buddy Fence (2026-09-25): reference-style hero, header mascot, icon cards
    ===================================================================== */
-.brand-buddy { height: 66px; width: auto; margin-right: 12px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
-.brand-mark { height: 56px; }
-@media (max-width: 840px) { .brand-buddy { height: 44px; margin-right: 6px; } .brand-mark { height: 38px; } }
+.brand-mark { height: 60px; }
+@media (max-width: 840px) { .brand-mark { height: 42px; } }
 
 .home-hero.fence .bg { background-position: 50% 62%; }
 .home-hero.fence { min-height: min(86vh, 820px); }
 .home-hero.fence .hero-v3 { align-items: center; }
 .home-hero.fence .scrim { background: linear-gradient(90deg, rgba(10, 22, 38, 0.9) 0%, rgba(10, 22, 38, 0.82) 30%, rgba(10, 22, 38, 0.58) 52%, rgba(10, 22, 38, 0.22) 75%, rgba(10, 22, 38, 0.08) 100%); }
-.home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 780px) 1fr; gap: 40px; max-width: 1480px; padding-bottom: clamp(70px, 8vw, 110px) !important; }
-.home-hero.fence h1 { font-size: clamp(3.4rem, 7.2vw, 7.2rem); line-height: 0.9; letter-spacing: 0.01em; margin: 6px 0 14px; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35); }
+.home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: clamp(32px, 5vw, 80px); max-width: 1480px; align-items: center; padding-bottom: clamp(70px, 8vw, 110px) !important; }
+.home-hero.fence .hero-copy { padding-bottom: 0; }
+.home-hero.fence .scrim { background: linear-gradient(90deg, rgba(10, 22, 38, 0.92) 0%, rgba(10, 22, 38, 0.82) 34%, rgba(10, 22, 38, 0.5) 60%, rgba(10, 22, 38, 0.3) 100%); }
+@media (max-width: 1100px) { .home-hero.fence .hero-v3 { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); } }
+@media (max-width: 900px) { .home-hero.fence .hero-v3 { grid-template-columns: 1fr; } }
+.home-hero.fence h1 { font-size: clamp(3rem, 5.4vw, 5.6rem); line-height: 0.9; letter-spacing: 0.01em; margin: 6px 0 14px; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35); }
 .home-hero.fence .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; }
 .hero-tags { display: flex; flex-wrap: wrap; gap: 0 14px; margin: 0 0 26px; font-family: 'Bebas Neue', sans-serif; font-size: clamp(16px, 1.6vw, 22px); letter-spacing: 0.16em; color: rgba(255, 255, 255, 0.85); }
 .hero-tags span + span::before { content: '|'; margin-right: 14px; color: var(--gold); }

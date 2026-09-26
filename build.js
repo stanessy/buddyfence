@@ -126,7 +126,6 @@ const header = (isHome) => `
 <header class="site-header${isHome ? ' home' : ''}">
   <div class="container wide">
     <a class="brand" href="/">
-      <img class="brand-buddy" src="/assets/img/buddy-bust.webp" alt="" aria-hidden="true" width="415" height="440" />
       <img class="brand-mark" src="/assets/img/buddy-fence-wordmark-white.png" alt="Buddy Fence" />
     </a>
     <nav class="site-nav">
@@ -385,9 +384,20 @@ const homeBody = `
         <li>${iconCircle('hammer')}<div><strong>Professional installation</strong><span>Clean, fast &amp; reliable</span></div></li>
       </ul>
       <div class="hero-btns">
-        <a class="btn btn-lg" href="#estimate" data-open-estimate>Get a Free Estimate →</a>
-        <a class="btn ghost btn-lg" href="${telHref()}">${ico('phone', 18)} ${SITE.phone}</a>
+        <a class="btn btn-lg" href="${telHref()}">${ico('phone', 18)} ${SITE.phone}</a>
+        <a class="btn ghost btn-lg" href="#services">See our fences →</a>
       </div>
+    </div>
+    <div class="hero-side">
+    <div class="hero-card enter" style="--i:2">
+      <span class="card-buddy-wrap"><img class="card-buddy" src="/assets/img/buddy-bust.webp" alt="Buddy, the Buddy Fence mascot, giving a thumbs up" width="415" height="440" /></span>
+      <div class="hero-card-head">
+        <p class="eyebrow">Free Estimate</p>
+        <h3>Tell us about your fence.</h3>
+      </div>
+      <p class="hero-card-sub">We measure on site, and your written per-foot price arrives the same day.</p>
+      ${estimateForm('hero', { compact: true })}
+    </div>
     </div>
   </div>
 </div>
