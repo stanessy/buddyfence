@@ -68,7 +68,7 @@ const SERVICES = [
       { q: 'Does vinyl fencing hold up in the rain?', a: 'Yes. Vinyl does not absorb water, so it cannot rot or grow mold the way untreated wood can. A rinse with a hose keeps it clean.' },
       { q: 'Can vinyl fence panels be installed on a slope?', a: 'Yes. We rack or step panels to follow the grade so the fence looks intentional rather than gapped at the bottom.' },
     ],
-    photo: null,
+    photo: 'vinyl-fence.jpg',
     icon: 'grid',
   },
   {
