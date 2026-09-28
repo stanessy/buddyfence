@@ -32,10 +32,10 @@
 
 :root {
   /* Oak palette 2026-09-28: tokens sampled from the wordmark (navy #0E3251, oak #C36A24) */
-  --navy: #0E3251;
-  --navy2: #174266;
-  --deep: #0B2A45;
-  --navy-deep: #08213A;
+  --navy: #1C2E44;
+  --navy2: #173451;
+  --deep: #0A1626;
+  --navy-deep: #081221;
   /* Cedar-gold palette 2026-09-28 (bright yellow #F6B015 kept in tag pre-cedar-palette-2026-09-28) */
   --gold: #C36A24;        /* oak: buttons, icons, rules */
   --gold-dark: #944512;   /* oak shadow: hover, accent words on light sections */
@@ -1314,10 +1314,11 @@ h2 .hl { color: var(--gold-dark); }
 .ht.gold .big { color: #fff; }
 .ht.gold .big span, .ht.gold h3 { color: var(--gold-soft); }
 .ht.gold p { color: #E6ECF2; }
-.home-hero.fence .scrim { background: linear-gradient(90deg, rgba(8, 33, 58, 0.90) 0%, rgba(8, 33, 58, 0.66) 42%, rgba(8, 33, 58, 0.30) 70%, rgba(8, 33, 58, 0.12) 100%); }
+.home-hero.fence .scrim { background: linear-gradient(90deg, rgba(8, 20, 40, 0.90) 0%, rgba(8, 20, 40, 0.66) 42%, rgba(8, 20, 40, 0.30) 70%, rgba(8, 20, 40, 0.12) 100%); }
 .trust-row.hero-trust { background: var(--navy-deep); border-top: 3px solid var(--gold); }
 .topbar { background: var(--navy-deep); }
-.site-header, .site-footer, .sec.navy, .why, .cta-band, .final { background: var(--navy); }
+.site-header, .site-footer { background: var(--deep); }
+.sec.navy, .why, .cta-band, .final { background: var(--navy); }
 .why-bg { opacity: 0.16; }
 .area-gold { background: var(--gold); color: #fff; }
 .area-gold h2, .area-gold .eyebrow.dark, .area-gold .sub.dark, .area-list h3, .area-list li a, .area-list li span, .area-note, .area-note a { color: #fff; }
