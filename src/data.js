@@ -12,7 +12,7 @@ const SITE = {
   // "Buddy Fencing" division in the platform (same id in dev and prod)
   divisionId: 19,
   tileDivisionId: 19,
-  accent: '#C9922E',
+  accent: '#C36A24',
   navy: '#1C2E44',
   // Acorn Finance dealer pre-qual link (blocks iframing, always open a new tab)
   acornUrl: 'https://www.acornfinance.com/pre-qualify/?d=2T7C4&utm_medium=web_pre_qual_link_copy_welcome',
