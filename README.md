@@ -21,7 +21,7 @@ brand system, fencing content.
   composited image cut from the AI reference. Service cards fall back to icons
   (`photo: null` in data.js) until photos exist.
 - Swap the placeholder testimonials in `src/data.js` for real reviews.
-- OR CCB number in `SITE.legalLine`.
+- [x] OR CCB #263768 is in `SITE.legalLine` (WA reg #BUDDYBL746MO too).
 - Confirm phone + `info@buddyfence.com` and set DNS to GitHub Pages.
 - A fence ballpark calculator (linear feet × style + gates) is not built yet; the tile
   site's shower designer was removed rather than ported.
